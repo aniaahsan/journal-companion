@@ -3,6 +3,7 @@ import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import PromptCard from "@/components/PromptCard";
 import JournalEditor from "@/components/JournalEditor";
 import type { Entry } from "@/lib/types";
+import Layout from "@/components/Layout";
 
 const PROMPT = "What energized me today, and why? (Hardcoded for now — AI later)";
 
@@ -12,9 +13,9 @@ export default function HomePage() {
   const start = () => setCurrent(null);
 
   return (
-    <Container sx={{ py: 4 }}>
+    <Layout>
       <Stack spacing={3}>
-        <Typography variant="h3" sx={{ fontWeight: 700 }}>
+        <Typography variant="h3" align="center" >
           Welcome back 👋
         </Typography>
         <PromptCard prompt={PROMPT} />
@@ -25,6 +26,6 @@ export default function HomePage() {
         </Box>
         <JournalEditor current={current ?? undefined} />
       </Stack>
-    </Container>
+    </Layout>
   );
 }

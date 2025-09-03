@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Card, CardContent, Container, Grid2 as Grid, Stack, Typography } from "@mui/material";
 import { Storage } from "@/lib/storage";
+import Layout from "@/components/Layout";
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
@@ -43,9 +44,9 @@ export default function InsightsPage() {
   }, [entries.length, checkins.length]);
 
   return (
-    <Container sx={{ py: 4 }}>
+    <Layout>
       <Stack spacing={3}>
-        <Typography variant="h3">Insights</Typography>
+        <Typography variant="h3" align="center">Insights</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <StatCard label="Days journaled" value={stats.uniqueDays} />
@@ -58,6 +59,6 @@ export default function InsightsPage() {
           </Grid>
         </Grid>
       </Stack>
-    </Container>
+    </Layout>
   );
 }

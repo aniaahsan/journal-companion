@@ -1,6 +1,4 @@
-// =============================
-// File: src/pages/CheckIn.tsx
-// =============================
+import Layout from "@/components/Layout";
 import React, { useState } from "react";
 import {
   Box,
@@ -90,9 +88,9 @@ export default function CheckInPage() {
   };
 
   return (
-    <Container sx={{ py: 4 }}>
+    <Layout>
       <Stack spacing={3}>
-        <Typography variant="h3">Daily Check‑In</Typography>
+        <Typography variant="h3" align="center">Daily Check‑In</Typography>
         <Card>
           <CardContent>
             <Stack spacing={3}>
@@ -195,6 +193,6 @@ export default function CheckInPage() {
           </CardContent>
         </Card>
       </Stack>
-    </Container>
+    </Layout>
   );
 }

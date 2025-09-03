@@ -4,6 +4,7 @@ import EntryList from "@/components/EntryList";
 import JournalEditor from "@/components/JournalEditor";
 import { Storage } from "@/lib/storage";
 import type { Entry } from "@/types";
+import Layout from "@/components/Layout";
 
 export default function HistoryPage() {
   const [query, setQuery] = useState("");
@@ -20,9 +21,9 @@ export default function HistoryPage() {
   }, [all.length, query]);
 
   return (
-    <Container sx={{ py: 4 }}>
+    <Layout>
       <Stack spacing={3}>
-        <Typography variant="h3">History</Typography>
+        <Typography variant="h3" align="center">History</Typography>
         <TextField
           placeholder="Search entries…"
           value={query}
@@ -35,6 +36,6 @@ export default function HistoryPage() {
           onDeleted={() => setPicked(null)}
         />
       </Stack>
-    </Container>
+    </Layout>
   );
 }
