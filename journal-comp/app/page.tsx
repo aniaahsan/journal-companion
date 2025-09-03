@@ -10,6 +10,12 @@ export default async function HomePage() {
   // Middleware already protects this, but bail safely if not
   if (!user) return null;
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("preferred_name, emotions, topics")
+    .eq("id", user.id)
+    .single();
+
   const { data } = await supabase
     .from("entries")
     .select("*")
@@ -25,7 +31,7 @@ export default async function HomePage() {
         <Stack spacing={3}>
           <Box>
             <Typography variant="h5" sx={{ fontWeight: 600 }}>
-              Welcome back{user.email ? `, ${user.email}` : ""} 👋
+              Welcome back, {profile?.preferred_name} 👋
             </Typography>
           </Box>
 
