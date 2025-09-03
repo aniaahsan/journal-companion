@@ -1,38 +1,30 @@
 "use client";
 
 import { useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { Box, Card, CardContent, CardActions, TextField, Button, LinearProgress } from "@mui/material";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
-import PsychologyRoundedIcon from "@mui/icons-material/PsychologyRounded";
-import { supabase } from "@/lib/supabaseClient";
 
-type Props = {
-  onSaved?: () => void;
-  analyze?: (text: string) => Promise<void>; // wire your /api/analyze later
-};
-
-export default function EntryEditor({ onSaved, analyze }: Props) {
+export default function EntryEditor() {
   const [text, setText] = useState("");
   const [saving, setSaving] = useState(false);
-  const disabled = saving || text.trim().length === 0;
 
   async function save() {
     if (!text.trim()) return;
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { window.location.href = "/login"; return; }
+
     const { error } = await supabase
       .from("entries")
       .insert({ user_id: user.id, content: text.trim() });
+
     setSaving(false);
     if (error) { alert(error.message); return; }
     setText("");
-    onSaved?.();
-  }
 
-  async function onAnalyze() {
-    if (!analyze) return;
-    await analyze(text);
+    // ✅ refresh the page after save
+    window.location.reload();
   }
 
   return (
@@ -51,20 +43,12 @@ export default function EntryEditor({ onSaved, analyze }: Props) {
       </CardContent>
       <CardActions sx={{ justifyContent: "flex-end", p: 2, pt: 0 }}>
         <Button
-          variant="outlined"
-          startIcon={<PsychologyRoundedIcon />}
-          onClick={onAnalyze}
-          disabled={text.trim().length === 0}
-        >
-          Analyze
-        </Button>
-        <Button
           variant="contained"
           startIcon={<SaveRoundedIcon />}
           onClick={save}
-          disabled={disabled}
+          disabled={saving || text.trim().length === 0}
         >
-          Save Entry
+          {saving ? "Saving..." : "Save Entry"}
         </Button>
       </CardActions>
     </Card>

@@ -30,12 +30,7 @@ export default async function HomePage() {
           </Box>
 
           <Box>
-            <EntryEditor
-              onSaved={() => {
-                // server-rendered; reload client to refresh list
-                location.reload();
-              }}
-            />
+            <EntryEditor/>
           </Box>
 
           <Box>

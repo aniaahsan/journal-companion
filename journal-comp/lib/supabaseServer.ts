@@ -6,6 +6,6 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 export function createSupabaseServer() {
   // Some versions expect a function that returns the cookie store
   return createServerComponentClient({
-    cookies,
+    cookies: () => cookies(),
   });
 }
