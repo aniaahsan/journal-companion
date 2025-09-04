@@ -24,7 +24,9 @@ export default function HistoryPage() {
   return (
     <Layout>
       <Stack spacing={2}>
-        <Typography variant="h3" align="center">History</Typography>
+        <Typography variant="h3" align="center">
+          History
+        </Typography>
         {rows.map((r) => (
           <Card key={r.id}>
             <CardContent>

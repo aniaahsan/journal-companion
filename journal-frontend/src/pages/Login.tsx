@@ -10,7 +10,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   async function onLogin() {
-    setErr(null); setLoading(true);
+    setErr(null);
+    setLoading(true);
     try {
       const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
@@ -33,10 +34,22 @@ export default function LoginPage() {
       <Card>
         <CardContent>
           <Stack spacing={2}>
-            <Typography variant="h5" fontWeight={800}>Sign in</Typography>
+            <Typography variant="h5" fontWeight={800}>
+              Sign in
+            </Typography>
             {err && <Alert severity="error">{err}</Alert>}
-            <TextField label="Username" value={username} onChange={(e) => setU(e.target.value)} autoFocus />
-            <TextField label="Password" type="password" value={password} onChange={(e) => setP(e.target.value)} />
+            <TextField
+              label="Username"
+              value={username}
+              onChange={(e) => setU(e.target.value)}
+              autoFocus
+            />
+            <TextField
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setP(e.target.value)}
+            />
             <Button variant="contained" onClick={onLogin} disabled={loading}>
               {loading ? "Signing in…" : "Sign in"}
             </Button>

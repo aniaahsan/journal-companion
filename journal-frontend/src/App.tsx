@@ -25,14 +25,14 @@ export default function App() {
       <Box component="main" sx={{ flex: 1 }}>
         <Routes>
           <Route path="/login" element={<LoginPage />} /> {/* public */}
-
-          <Route element={<RequireAuth />}>              {/* protected */}
+          <Route element={<RequireAuth />}>
+            {" "}
+            {/* protected */}
             <Route path="/" element={<HomePage />} />
             <Route path="/check-in" element={<CheckInPage />} />
             <Route path="/insights" element={<InsightsPage />} />
             <Route path="/history" element={<HistoryPage />} />
           </Route>
-
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Box>

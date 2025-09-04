@@ -1,5 +1,5 @@
 import React from "react";
-import { Container, Box, Button } from "@mui/material";
+import { Container, Box, Button, Fab } from "@mui/material";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -21,11 +21,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         }}
       >
         {children}
-        <Button onClick={() => { localStorage.removeItem("token"); window.location.href="/login"; }}>
-  Logout
+        <Button
+          variant="contained"
+          color="success"
+          onClick={() => {
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+          }}
+          sx={{
+            position: "fixed",
+            bottom: 24,
+            left: "50%",
+            transform: "translateX(-50%)",
+            borderRadius: "999px",
+            px: 4,
+            py: 1.5,
+            fontWeight: 700,
+            boxShadow: 3,
+          }}
+        >
+          Logout
         </Button>
       </Box>
-      
     </Container>
   );
 }

@@ -27,20 +27,24 @@ export default function InsightsPage() {
   }, []);
 
   const stats = useMemo(() => {
-    const uniqueDays = new Set(
-      checkins.map(c => c.created_at.slice(0,10))
-    ).size;
+    const uniqueDays = new Set(checkins.map((c) => c.created_at.slice(0, 10))).size;
 
-    const avgMood = checkins.length 
+    const avgMood = checkins.length
       ? `${Math.round(checkins.reduce((a, c) => a + c.moodScore, 0) / checkins.length)}/5`
       : "–";
 
     const counts = new Map<string, number>();
-    checkins.forEach(ci => (ci.struggles || []).forEach(s =>
-      counts.set(s, (counts.get(s) || 0) + 1)
-    ));
-    let top = "–", max = 0;
-    counts.forEach((v, k) => { if (v > max) { max = v; top = k; } });
+    checkins.forEach((ci) =>
+      (ci.struggles || []).forEach((s) => counts.set(s, (counts.get(s) || 0) + 1))
+    );
+    let top = "–",
+      max = 0;
+    counts.forEach((v, k) => {
+      if (v > max) {
+        max = v;
+        top = k;
+      }
+    });
 
     return { uniqueDays, avgMood, mostCommonStruggle: top };
   }, [checkins]);
@@ -48,7 +52,9 @@ export default function InsightsPage() {
   return (
     <Layout>
       <Stack spacing={3}>
-        <Typography variant="h3" align="center">Insights</Typography>
+        <Typography variant="h3" align="center">
+          Insights
+        </Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <StatCard label="Days journaled" value={stats.uniqueDays} />

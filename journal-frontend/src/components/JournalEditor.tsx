@@ -8,7 +8,6 @@ import { toDateInput, todayISO, uid } from "@/lib/utils";
 import MoodSelector from "@/components/MoodSelector";
 import { createEntry as apiCreateEntry } from "@/lib/api"; // 👈 add this
 
-
 export default function JournalEditor({
   current,
   onSaved,

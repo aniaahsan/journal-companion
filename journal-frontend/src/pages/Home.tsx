@@ -43,8 +43,12 @@ export default function HomePage() {
         {loading ? null : <PromptCard prompt={prompt} />}
 
         <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
-          <Button variant="outlined" onClick={loadPrompt}>Refresh prompt</Button>
-          <Button variant="contained" onClick={() => setCurrentEntry(null)}>Start journaling</Button>
+          <Button variant="outlined" onClick={loadPrompt}>
+            Refresh prompt
+          </Button>
+          <Button variant="contained" onClick={() => setCurrentEntry(null)}>
+            Start journaling
+          </Button>
         </Box>
 
         <JournalEditor
