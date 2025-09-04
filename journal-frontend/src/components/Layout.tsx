@@ -29,7 +29,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             window.location.href = "/login";
           }}
           sx={{
-            top: 10,
+            top: 15,
             left: "50%",
             transform: "translateX(-50%)",
             borderRadius: "3px",
@@ -42,7 +42,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           Logout
         </Button>
       </Box>
-      
     </Container>
   );
 }
