@@ -1,5 +1,5 @@
 import React from "react";
-import { Container, Box } from "@mui/material";
+import { Container, Box, Button } from "@mui/material";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -21,7 +21,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         }}
       >
         {children}
+        <Button onClick={() => { localStorage.removeItem("token"); window.location.href="/login"; }}>
+  Logout
+        </Button>
       </Box>
+      
     </Container>
   );
 }

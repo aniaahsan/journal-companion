@@ -1,7 +1,24 @@
 export type FEEntry = { date: string; content: string };
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-const DEMO_TOKEN = import.meta.env.VITE_DEMO_TOKEN || "super-secret-demo-token";
+// const DEMO_TOKEN = import.meta.env.VITE_DEMO_TOKEN || "super-secret-demo-token";
+
+function getToken() {
+  return localStorage.getItem("token");
+}
+
+export async function apiFetch(input: string, init: RequestInit = {}) {
+  const headers = new Headers(init.headers || {});
+  const t = getToken();
+  if (t) headers.set("Authorization", `Bearer ${t}`);
+  const res = await fetch(`${API_URL}${input}`, { ...init, headers });
+  if (res.status === 401) {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+    throw new Error("Unauthorized");
+  }
+  return res;
+}
 
 export type EntryOut = {
   id: string;
@@ -13,40 +30,27 @@ export type EntryOut = {
   created_at: string;
 };
 
-export async function fetchEntries(limit = 20): Promise<EntryOut[]> {
-  const res = await fetch(`${API_URL}/api/entries?limit=${limit}`, {
-    headers: {
-      Authorization: `Bearer ${DEMO_TOKEN}`,
-    },
-  });
-  if (!res.ok) throw new Error("Failed to load entries");
+export async function fetchEntries(limit = 20) {
+  const res = await apiFetch(`/api/entries?limit=${limit}`);
   return res.json();
 }
 
-export async function fetchPrompt(entries: any[] = []): Promise<string> {
-  const res = await fetch(`${API_URL}/api/generate-prompt`, {
+export async function fetchPrompt(entries: any[] = []) {
+  const res = await apiFetch(`/api/generate-prompt`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${DEMO_TOKEN}`,
-    },
-    body: JSON.stringify({ entries }),  // [] triggers backend DB fallback
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ entries }),
   });
   const json = await res.json();
   return json.prompt;
 }
 
-
-export async function createEntry(data: Omit<EntryOut, "id" | "created_at">): Promise<EntryOut> {
-  const res = await fetch(`${API_URL}/api/entries`, {
+export async function createEntry(data: any) {
+  const res = await apiFetch(`/api/entries`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${DEMO_TOKEN}`,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Failed to create entry");
   return res.json();
 }
 
@@ -61,22 +65,15 @@ export type CheckIn = {
 };
 
 export async function fetchCheckIns(limit = 200): Promise<CheckIn[]> {
-  const res = await fetch(`${API_URL}/api/checkins?limit=${limit}`, {
-    headers: { Authorization: `Bearer ${DEMO_TOKEN}` },
-  });
-  if (!res.ok) throw new Error("Failed to load check-ins");
+  const res = await apiFetch(`/api/checkins?limit=${limit}`);
   return res.json();
 }
 
-export async function createCheckIn(data: Omit<CheckIn, "id" | "created_at">): Promise<CheckIn> {
-  const res = await fetch(`${API_URL}/api/checkins`, {
+export async function createCheckIn(data: Omit<CheckIn, "id" | "created_at">) {
+  const res = await apiFetch(`/api/checkins`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${DEMO_TOKEN}`,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Failed to create check-in");
   return res.json();
 }

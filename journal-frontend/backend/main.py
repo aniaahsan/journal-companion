@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Depends, HTTPException, Header
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from typing import List, Optional
+from auth import router as auth_router, get_current_user_id
 import os
 
 from langchain_groq import ChatGroq
@@ -21,7 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DEMO_TOKEN = os.getenv("DEMO_TOKEN", "demo-token")
+
 
 class EntryIn(BaseModel):
     title: str
@@ -34,17 +35,6 @@ class EntryOut(EntryIn):
     id: str
     created_at: str
 
-def require_demo_token(authorization: str | None = Header(default=None)):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing token")
-    token = authorization.split(" ", 1)[1]
-    if token != DEMO_TOKEN:
-        raise HTTPException(status_code=403, detail="Invalid token")
-    # Resolve the demo user id from DB
-    row = query("SELECT id FROM users WHERE username = %s", ("demo",))
-    if not row:
-        raise HTTPException(status_code=500, detail="Demo user missing")
-    return row[0][0]  # user_id
 
 @app.get("/")
 def root():
@@ -66,7 +56,7 @@ MOCK_ENTRIES = [
 @app.post("/api/generate-prompt")
 async def generate_prompt(
     req: PromptRequest | None = None,
-    user_id: str = Depends(require_demo_token),
+    user_id: str = Depends(get_current_user_id),
 ):
     # If frontend didn't send entries, pull last 3 from DB
     if req and req.entries:
@@ -111,11 +101,11 @@ async def generate_prompt(
 
 # ---- Entries: GET (History) + POST (Create) ----
 @app.get("/api/entries", response_model=list[EntryOut])
-def list_entries(user_id: str = Depends(require_demo_token), limit: int = 20, offset: int = 0):
-    return get_entries(user_id=user_id, limit=limit, offset=offset)
+def list_entries(user_id: str = Depends(get_current_user_id)):
+    return get_entries(user_id=user_id)
 
 @app.post("/api/entries", response_model=EntryOut)
-def create_entry(body: EntryIn, user_id: str = Depends(require_demo_token)):
+def create_entry(body: EntryIn, user_id: str = Depends(get_current_user_id)):
     rec = insert_entry(
         user_id=user_id,
         title=body.title,
@@ -142,14 +132,14 @@ class CheckInOut(CheckInIn):
 def list_checkins(
     limit: int = 200,
     offset: int = 0,
-    user_id: str = Depends(require_demo_token),
+    user_id: str = Depends(get_current_user_id),
 ):
     return get_checkins(user_id=user_id, limit=limit, offset=offset)
 
 @app.post("/api/checkins", response_model=CheckInOut)
 def create_checkin(
     body: CheckInIn,
-    user_id: str = Depends(require_demo_token),
+    user_id: str = Depends(get_current_user_id),
 ):
     rec = insert_checkin(
         user_id=user_id,
@@ -160,3 +150,5 @@ def create_checkin(
         note=body.note,
     )
     return CheckInOut(id=rec["id"], created_at=rec["created_at"], **body.model_dump())
+
+app.include_router(auth_router)
