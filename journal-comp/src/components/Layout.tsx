@@ -64,7 +64,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Reminder popup for no check-in today */}
         <ReminderPopup />
 
-        {/* Centered green pill logout at bottom */}
+        {/* Centered logout at bottom */}
         <Button
           variant="contained"
           color="success"
@@ -73,16 +73,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             window.location.href = "/login";
           }}
           sx={{
-            position: "fixed",
-            bottom: 24,
+            top: 15,
             left: "50%",
             transform: "translateX(-50%)",
-            borderRadius: "999px",
+            borderRadius: "3px",
             px: 4,
             py: 1.5,
             fontWeight: 700,
             boxShadow: 3,
-            zIndex: (theme) => theme.zIndex.snackbar + 1,
           }}
         >
           Logout
