@@ -63,13 +63,29 @@ MOCK_ENTRIES = [
 ]
 
 @app.post("/api/generate-prompt")
-async def generate_prompt(req: PromptRequest | None = None):
-    entries = req.entries if req and req.entries else MOCK_ENTRIES
+async def generate_prompt(
+    req: PromptRequest | None = None,
+    user_id: str = Depends(require_demo_token),
+):
+    # If frontend didn't send entries, pull last 3 from DB
+    if req and req.entries:
+        entries = req.entries
+    else:
+        rows = get_entries(user_id=user_id, limit=3)
+        entries = [
+            {"date": r["created_at"][:10], "content": r["content"]}
+            for r in rows
+        ]
+
+    if not entries:
+        entries = MOCK_ENTRIES  # absolute fallback
+
     llm = ChatGroq(
         groq_api_key=os.getenv("GROQ_API_KEY"),
         model=os.getenv("GROQ_MODEL", "llama-3.1-8b-instant"),
         temperature=0.8,
     )
+
     template = """
     You are a journaling coach.
     Based on recent entries:
@@ -83,11 +99,13 @@ async def generate_prompt(req: PromptRequest | None = None):
     formatted = prompt.format(
         entries="\n".join([f"- {e['date']}: {e['content']}" for e in entries])
     )
+
     try:
         ai_response = await llm.ainvoke(formatted)
         text = str(ai_response.content).strip()
     except Exception:
         text = "What energized you today, and why?"
+
     return {"success": True, "prompt": text}
 
 # ---- Entries: GET (History) + POST (Create) ----

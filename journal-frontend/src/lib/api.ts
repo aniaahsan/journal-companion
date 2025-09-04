@@ -23,16 +23,19 @@ export async function fetchEntries(limit = 20): Promise<EntryOut[]> {
   return res.json();
 }
 
-export async function fetchPrompt(entries: FEEntry[] = []): Promise<string> {
+export async function fetchPrompt(entries: any[] = []): Promise<string> {
   const res = await fetch(`${API_URL}/api/generate-prompt`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ entries }),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${DEMO_TOKEN}`,
+    },
+    body: JSON.stringify({ entries }),  // [] triggers backend DB fallback
   });
-  if (!res.ok) throw new Error(`Prompt error: ${res.status}`);
-  const data = await res.json();
-  return data?.prompt || "What energized you today, and why?";
+  const json = await res.json();
+  return json.prompt;
 }
+
 
 export async function createEntry(data: Omit<EntryOut, "id" | "created_at">): Promise<EntryOut> {
   const res = await fetch(`${API_URL}/api/entries`, {
