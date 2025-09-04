@@ -30,8 +30,9 @@ export default function InsightsPage() {
     const uniqueDays = new Set(checkins.map((c) => c.created_at.slice(0, 10))).size;
 
     const avgMood = checkins.length
-      ? `${Math.round(checkins.reduce((a, c) => a + c.moodScore, 0) / checkins.length)}/5`
-      : "–";
+  ? `${(checkins.reduce((a, c) => a + c.moodScore, 0) / checkins.length).toFixed(1)}/5`
+  : "–";
+
 
     const counts = new Map<string, number>();
     checkins.forEach((ci) =>

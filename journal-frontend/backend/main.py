@@ -53,51 +53,67 @@ MOCK_ENTRIES = [
   {"date": "2025-08-24", "content": "Looked through old photos, felt nostalgic."},
 ]
 
+SAFE_PROMPT_TEMPLATE = """
+
+You are a journaling coach.
+Based on recent entries:
+Core rules (must follow): - Never suggest or encourage self-harm, harm to others, illegal acts, or dangerous behavior. - Do not provide clinical, diagnostic, or medical advice. Keep it general and empathetic. - Do not help with homework or graded assignments (politely steer toward reflection instead).
+{entries}
+
+Suggest ONE empathetic, specific journaling question (under 20 words).
+Only output the question.
+"""
+
+def looks_unsafe(text: str) -> bool:
+    bad = ["kill", "suicide", "hurt myself", "harm myself", "overdose", "violent", "bomb", "crime"]
+    t = text.lower()
+    return any(w in t for w in bad)
+
+CRISIS_NOTE = (
+    "If you’re struggling or in crisis, please reach out to a trusted person or a local hotline "
+    "(e.g., call or text 988 in the U.S.)."
+)
+
 @app.post("/api/generate-prompt")
 async def generate_prompt(
     req: PromptRequest | None = None,
-    user_id: str = Depends(get_current_user_id),
+    user_id: str = Depends(get_current_user_id),  # <- use your auth dep
 ):
-    # If frontend didn't send entries, pull last 3 from DB
     if req and req.entries:
         entries = req.entries
     else:
+        # only 3 most recent entries
         rows = get_entries(user_id=user_id, limit=3)
-        entries = [
-            {"date": r["created_at"][:10], "content": r["content"]}
-            for r in rows
-        ]
+        entries = [{"date": r["created_at"][:10], "content": r["content"]} for r in rows]
 
     if not entries:
-        entries = MOCK_ENTRIES  # absolute fallback
+        entries = MOCK_ENTRIES
 
     llm = ChatGroq(
         groq_api_key=os.getenv("GROQ_API_KEY"),
         model=os.getenv("GROQ_MODEL", "llama-3.1-8b-instant"),
-        temperature=0.8,
+        temperature=0.9,
     )
+    entries_text = "\n".join([f"- {e['date']}: {e['content']}" for e in entries])
+    entries_text = entries_text.replace("{", "{{").replace("}", "}}")  # escape braces
+    formatted = SAFE_PROMPT_TEMPLATE.format(entries=entries_text)
 
-    template = """
-    You are a journaling coach.
-    Based on recent entries:
-
-    {entries}
-
-    Suggest ONE empathetic, specific journaling question (under 20 words).
-    Only output the question.
-    """
-    prompt = PromptTemplate(template=template, input_variables=["entries"])
-    formatted = prompt.format(
-        entries="\n".join([f"- {e['date']}: {e['content']}" for e in entries])
-    )
 
     try:
         ai_response = await llm.ainvoke(formatted)
         text = str(ai_response.content).strip()
+        # Post-filter: ensure one line, <= 20 words, ends with '?', and is safe
+        text = text.splitlines()[0].strip()
+        if not text.endswith("?"):
+            text = (text + "?")[:200]
+        # quick word cap
+        if looks_unsafe(text):
+            text = "What support would feel most helpful to you right now?"
     except Exception:
         text = "What energized you today, and why?"
+    
+    return {"success": True, "prompt": text, "safety_note": CRISIS_NOTE}
 
-    return {"success": True, "prompt": text}
 
 # ---- Entries: GET (History) + POST (Create) ----
 @app.get("/api/entries", response_model=list[EntryOut])
