@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: journaling_app
+      POSTGRES_USER: journal_user
+      POSTGRES_PASSWORD: journal_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U journal_user -d journaling_app"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+volumes:
+  dbdata:

@@ -8,7 +8,7 @@ export type Entry = {
   title: string;
   content: string;
   tags: string[];
-  mood: MoodIcon | null;
+  mood: string | null;
 };
 
 export type CheckIn = {

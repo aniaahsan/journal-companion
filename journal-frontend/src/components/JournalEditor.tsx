@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Box, Button, Card, CardActions, CardContent, Stack, TextField } from "@mui/material";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import type { Entry } from "@/types";
+import type { Entry } from "@/lib/types";
 import { Storage } from "@/lib/storage";
 import { toDateInput, todayISO, uid } from "@/lib/utils";
 import MoodSelector from "@/components/MoodSelector";
+import { createEntry as apiCreateEntry } from "@/lib/api"; // 👈 add this
+
 
 export default function JournalEditor({
   current,
@@ -28,18 +30,69 @@ export default function JournalEditor({
       mood: null,
     }
   );
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (current) setEntry(current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current?.id]);
 
-  const save = () => {
-    const payload: Entry = { ...entry, updatedAt: todayISO() };
-    Storage.upsertEntry(payload);
-    onSaved?.(payload);
+  const save = async () => {
+    // Frontend validation
+    if (!entry.title.trim() || !entry.content.trim()) return;
+
+    setSaving(true);
+    try {
+      // 1) Call backend
+      const created = await apiCreateEntry({
+        title: entry.title.trim(),
+        content: entry.content.trim(),
+        mood: entry.mood ?? null,
+        tags: entry.tags ?? [],
+        is_private: true,
+      });
+
+      // 2) Map backend shape -> your Entry type
+      const mapped: Entry = {
+        id: created.id,
+        title: created.title,
+        content: created.content,
+        mood: created.mood ?? null,
+        tags: created.tags ?? [],
+        // created.created_at is ISO string; keep both created/updated as now for simplicity
+        createdAt: created.created_at,
+        updatedAt: todayISO(),
+        // If you want the date picker to show created date:
+        date: created.created_at.slice(0, 10),
+      };
+
+      // 3) Persist locally (optional but makes UI feel instant / offline-ish)
+      Storage.upsertEntry(mapped);
+
+      // 4) Bubble up
+      onSaved?.(mapped);
+
+      // 5) Reset editor for a new entry
+      setEntry({
+        id: uid(),
+        createdAt: todayISO(),
+        updatedAt: todayISO(),
+        date: toDateInput(),
+        title: "Untitled",
+        content: "",
+        tags: [],
+        mood: null,
+      });
+    } catch (e) {
+      console.error("Failed to save entry:", e);
+      // Optional: surface an error Snackbar here
+    } finally {
+      setSaving(false);
+    }
   };
 
   const del = () => {
+    // NOTE: backend DELETE not wired yet; keeping local delete for now
     if (!current) return;
     Storage.deleteEntry(current.id);
     onDeleted?.();
@@ -90,8 +143,13 @@ export default function JournalEditor({
         >
           Delete
         </Button>
-        <Button variant="contained" startIcon={<SaveRoundedIcon />} onClick={save}>
-          Save
+        <Button
+          variant="contained"
+          startIcon={<SaveRoundedIcon />}
+          onClick={save}
+          disabled={saving}
+        >
+          {saving ? "Saving…" : "Save"}
         </Button>
       </CardActions>
     </Card>

@@ -8,8 +8,8 @@ export default function MoodSelector({
   value,
   onChange,
 }: {
-  value: MoodIcon | null;
-  onChange: (m: MoodIcon | null) => void;
+  value: string | null;
+  onChange: (m: string | null) => void;
 }) {
   return (
     <ToggleButtonGroup
