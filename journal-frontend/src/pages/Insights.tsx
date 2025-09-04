@@ -1,7 +1,8 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { Card, CardContent, Container, Grid2 as Grid, Stack, Typography } from "@mui/material";
 import { Storage } from "@/lib/storage";
 import Layout from "@/components/Layout";
+import { fetchCheckIns, CheckIn } from "@/lib/api";
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
@@ -19,29 +20,30 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
 }
 
 export default function InsightsPage() {
-  const entries = Storage.listEntries();
-  const checkins = Storage.listCheckIns();
+  const [checkins, setCheckins] = useState<CheckIn[]>([]);
+
+  useEffect(() => {
+    fetchCheckIns().then(setCheckins).catch(console.error);
+  }, []);
 
   const stats = useMemo(() => {
-    const uniqueDays = new Set(entries.map((e) => e.date)).size;
-    const avgMood = checkins.length
-      ? (checkins.reduce((a, c) => a + c.moodScore, 0) / checkins.length).toFixed(1)
+    const uniqueDays = new Set(
+      checkins.map(c => c.created_at.slice(0,10))
+    ).size;
+
+    const avgMood = checkins.length 
+      ? `${Math.round(checkins.reduce((a, c) => a + c.moodScore, 0) / checkins.length)}/5`
       : "–";
-    const mostCommonStruggle = (() => {
-      const map = new Map<string, number>();
-      checkins.forEach((c) => c.struggles.forEach((s) => map.set(s, (map.get(s) || 0) + 1)));
-      let top = "–",
-        max = 0;
-      map.forEach((v, k) => {
-        if (v > max) {
-          max = v;
-          top = k;
-        }
-      });
-      return top;
-    })();
-    return { uniqueDays, avgMood, mostCommonStruggle };
-  }, [entries.length, checkins.length]);
+
+    const counts = new Map<string, number>();
+    checkins.forEach(ci => (ci.struggles || []).forEach(s =>
+      counts.set(s, (counts.get(s) || 0) + 1)
+    ));
+    let top = "–", max = 0;
+    counts.forEach((v, k) => { if (v > max) { max = v; top = k; } });
+
+    return { uniqueDays, avgMood, mostCommonStruggle: top };
+  }, [checkins]);
 
   return (
     <Layout>

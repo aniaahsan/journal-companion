@@ -1,12 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
+from typing import List, Optional
 import os
 
 from langchain_groq import ChatGroq
 from langchain.prompts import PromptTemplate
-from db import get_entries, insert_entry, query
+from db import get_entries, insert_entry, query, insert_checkin, get_checkins
 
 load_dotenv()
 
@@ -124,3 +125,38 @@ def create_entry(body: EntryIn, user_id: str = Depends(require_demo_token)):
         is_private=body.is_private,
     )
     return EntryOut(id=rec["id"], created_at=rec["created_at"], **body.model_dump())
+
+# check ins backend
+class CheckInIn(BaseModel):
+    moodScore: int = Field(ge=1, le=10)
+    stress: int = Field(ge=0, le=10)
+    energy: int = Field(ge=0, le=10)
+    struggles: List[str] = []
+    note: Optional[str] = None
+
+class CheckInOut(CheckInIn):
+    id: str
+    created_at: str
+
+@app.get("/api/checkins", response_model=List[CheckInOut])
+def list_checkins(
+    limit: int = 200,
+    offset: int = 0,
+    user_id: str = Depends(require_demo_token),
+):
+    return get_checkins(user_id=user_id, limit=limit, offset=offset)
+
+@app.post("/api/checkins", response_model=CheckInOut)
+def create_checkin(
+    body: CheckInIn,
+    user_id: str = Depends(require_demo_token),
+):
+    rec = insert_checkin(
+        user_id=user_id,
+        mood_score=body.moodScore,
+        stress=body.stress,
+        energy=body.energy,
+        struggles=body.struggles,
+        note=body.note,
+    )
+    return CheckInOut(id=rec["id"], created_at=rec["created_at"], **body.model_dump())

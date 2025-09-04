@@ -1,5 +1,6 @@
 import Layout from "@/components/Layout";
 import React, { useState } from "react";
+import { createCheckIn } from "@/lib/api"; 
 import {
   Box,
   Button,
@@ -11,6 +12,7 @@ import {
   TextField,
   Typography,
   Chip,
+  Snackbar,
 } from "@mui/material";
 import { Storage } from "@/lib/storage";
 import { todayISO, uid } from "@/lib/utils";
@@ -69,23 +71,24 @@ export default function CheckInPage() {
   const [topics, setTopics] = useState<string[]>([]);
   const [struggles, setStruggles] = useState<string[]>([]);
   const [note, setNote] = useState("");
-
+  const [snack, setSnack] = useState(false);
+  const resetForm = () => { setMood(3); setStress(4); setEnergy(6); setEmotions([]); setTopics([]); setStruggles([]); setNote(""); };
   const toggle = (list: string[], setList: (v: string[]) => void, item: string) => {
     setList(list.includes(item) ? list.filter((x) => x !== item) : [...list, item]);
   };
 
-  const save = () => {
-    const payload: CheckIn = {
-      id: uid(),
-      createdAt: todayISO(),
-      moodScore: mood,
-      stress,
-      energy,
-      struggles: [...struggles, ...emotions, ...topics],
-      note,
-    };
-    Storage.addCheckIn(payload);
+  const save = async () => {
+  const payload = {
+    moodScore: mood,
+    stress,
+    energy,
+    struggles: [...struggles, ...emotions, ...topics],
+    note,
   };
+  await createCheckIn(payload);
+  setSnack(true);    // show snackbar
+  resetForm();  
+};
 
   return (
     <Layout>
@@ -192,6 +195,12 @@ export default function CheckInPage() {
             </Stack>
           </CardContent>
         </Card>
+        <Snackbar
+        open={snack}
+        autoHideDuration={3000}
+        onClose={() => setSnack(false)}
+        message="Check-in saved!"
+      />
       </Stack>
     </Layout>
   );
