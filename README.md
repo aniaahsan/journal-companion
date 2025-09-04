@@ -8,6 +8,7 @@ to run:
 ```bash
 git clone <your-repo-url>
 cd <your-repo>
+cd journal-comp
 cp .env.example .env
  
 2. Run
