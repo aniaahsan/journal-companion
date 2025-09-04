@@ -1,0 +1,19 @@
+# Node
+node_modules
+npm-debug.log
+dist
+build
+
+# Python/backend
+backend
+venv
+.env
+.env.*
+__pycache__
+
+# DB/seed
+db
+
+# Git
+.git
+.gitignore

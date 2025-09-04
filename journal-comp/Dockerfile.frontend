@@ -1,0 +1,42 @@
+# journal-comp/Dockerfile.frontend
+# Build stage
+FROM node:20-alpine AS build
+WORKDIR /app
+
+# Install deps (cache-friendly)
+COPY package*.json ./
+RUN npm ci
+
+# Copy the frontend project
+# (Use a .dockerignore to exclude backend/, db/, etc. — see below)
+COPY . .
+
+# Accept API URL & demo token for Vite at build time
+ARG VITE_API_URL
+ARG VITE_DEMO_TOKEN
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_DEMO_TOKEN=$VITE_DEMO_TOKEN
+
+# Build (expects an npm script "build")
+RUN npm run build
+
+# Normalize build output to /app/web (supports Vite "dist" or CRA "build")
+RUN sh -c 'if [ -d "dist" ]; then mv dist web; \
+    elif [ -d "build" ]; then mv build web; \
+    else echo "No build output found (expected dist/ or build/)" && ls -la && exit 1; fi'
+
+# Serve stage
+FROM nginx:alpine
+COPY --from=build /app/web /usr/share/nginx/html
+
+# Basic SPA routing
+RUN printf 'server { \
+  listen 80; \
+  server_name _; \
+  root /usr/share/nginx/html; \
+  index index.html; \
+  location / { try_files $uri /index.html; } \
+} \
+' > /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
